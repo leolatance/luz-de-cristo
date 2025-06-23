@@ -21,10 +21,9 @@ export const loadInitialBackup = () => {
       return true;
     }
     
-    // Se há usuários no localStorage mas o backup está vazio, criar backup
+    // Se há usuários no localStorage mas o backup está vazio, apenas avisar
     if (existingUsers && (!usersBackup.users || usersBackup.users.length === 0)) {
-      console.log('💾 Detectados usuários locais, criando backup...');
-      createBackupDownload();
+      console.log('💾 Detectados usuários locais. Use o botão "Backup Usuários" no admin quando necessário.');
       return true;
     }
     
@@ -105,10 +104,10 @@ export const autoBackup = () => {
     const now = new Date().getTime();
     const lastBackupTime = lastBackup ? new Date(lastBackup).getTime() : 0;
     
-    // Fazer backup a cada 1 hora de uso
+    // Fazer backup a cada 1 hora de uso (apenas log, sem download automático)
     if (now - lastBackupTime > 60 * 60 * 1000) {
-      console.log('⏰ Backup automático iniciado...');
-      createBackupDownload();
+      console.log('⏰ Backup recomendado. Use o botão "Backup Usuários" no admin.');
+      localStorage.setItem(BACKUP_KEY, new Date().toISOString());
       return true;
     }
     
