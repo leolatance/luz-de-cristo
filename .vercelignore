@@ -1,18 +1,16 @@
 # Dependencies
 node_modules
 
-# Development files
-src
-*.md
+# Documentation only
+README.md
+PREMIUM_SYSTEM.md
+USER_REGISTRATION.md
+SECURITY_README.md
+RESPONSIVENESS_TEST.md
+
+# Logs
 *.log
 .env*
-
-# Build tools
-vite.config.ts
-tsconfig*.json
-tailwind.config.js
-postcss.config.js
-eslint.config.js
 
 # Git
 .git
