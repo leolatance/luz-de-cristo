@@ -86,7 +86,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up periodic session cleanup
     const cleanupInterval = setInterval(cleanupExpiredSessions, 5 * 60 * 1000); // Every 5 minutes
 
-    return () => clearInterval(cleanupInterval);
+    // Escutar mudanças no localStorage entre abas
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'luzdecristo_users' && e.newValue) {
+        console.log('🔄 Detectada mudança nos usuários, sincronizando...');
+        // Forçar re-render dos componentes que dependem dos usuários
+        window.dispatchEvent(new CustomEvent('usersUpdated'));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(cleanupInterval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

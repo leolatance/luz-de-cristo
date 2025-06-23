@@ -52,6 +52,11 @@ const getUsers = (): User[] => {
 const saveUsers = (users: User[]): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    
+    // Disparar evento para sincronizar entre abas
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('usersUpdated'));
+    }
   } catch (error) {
     console.error('Erro ao salvar usuários:', error);
   }

@@ -3,6 +3,14 @@ import { User, Plus, Trash2, Eye, EyeOff, Shield, Users, Edit, Crown, Download }
 import { createUser, listUsers, deleteUser, updatePassword, updateUser, activatePremium } from '../lib/userManager';
 import { createBackupDownload } from '../lib/backupManager';
 import { toast } from 'sonner';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Checkbox } from './ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Badge } from './ui/badge';
+import { Alert, AlertDescription } from './ui/alert';
 
 interface UserData {
   id: string;
@@ -39,6 +47,8 @@ const AdminPanel: React.FC = () => {
     password: ''
   });
 
+  const [syncStatus, setSyncStatus] = useState<string>('');
+
   const loadUsers = () => {
     const userList = listUsers();
     setUsers(userList);
@@ -46,6 +56,22 @@ const AdminPanel: React.FC = () => {
 
   useEffect(() => {
     loadUsers();
+
+    // Escutar evento de atualização de usuários de outras abas
+    const handleUsersUpdate = () => {
+      console.log('📱 Sincronizando usuários entre abas...');
+      setSyncStatus('🔄 Sincronizando com outras abas...');
+      loadUsers();
+      
+      // Limpar status após 2 segundos
+      setTimeout(() => setSyncStatus(''), 2000);
+    };
+
+    window.addEventListener('usersUpdated', handleUsersUpdate);
+
+    return () => {
+      window.removeEventListener('usersUpdated', handleUsersUpdate);
+    };
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -173,6 +199,12 @@ const AdminPanel: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {syncStatus && (
+        <Alert>
+          <AlertDescription>{syncStatus}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
           Painel Administrativo
