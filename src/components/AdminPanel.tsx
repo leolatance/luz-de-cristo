@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Plus, Trash2, Eye, EyeOff, Shield, Users, Edit, Crown } from 'lucide-react';
+import { User, Plus, Trash2, Eye, EyeOff, Shield, Users, Edit, Crown, Download } from 'lucide-react';
 import { createUser, listUsers, deleteUser, updatePassword, updateUser, activatePremium } from '../lib/userManager';
+import { createBackupDownload } from '../lib/backupManager';
 import { toast } from 'sonner';
 
 interface UserData {
@@ -147,6 +148,19 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleBackup = () => {
+    try {
+      const backup = createBackupDownload();
+      if (backup) {
+        toast.success('Backup criado! Substitua o arquivo src/data/users-backup.json e faça commit.');
+      } else {
+        toast.info('Nenhum usuário para fazer backup');
+      }
+    } catch (error) {
+      toast.error('Erro ao criar backup');
+    }
+  };
+
   const formatDate = (date: Date | string) => {
     return new Date(date).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -203,8 +217,15 @@ const AdminPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Botão Criar Usuário */}
-      <div className="flex justify-end mb-6">
+      {/* Botões de Ação */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 mb-6">
+        <button
+          onClick={handleBackup}
+          className="flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all duration-200"
+        >
+          <Download size={20} />
+          <span>Backup Usuários</span>
+        </button>
         <button
           onClick={() => setShowCreateForm(!showCreateForm)}
           className="flex items-center space-x-2 bg-gradient-to-r from-golden-500 to-golden-600 text-white px-6 py-3 rounded-lg hover:from-golden-600 hover:to-golden-700 transition-all duration-200"
@@ -229,7 +250,7 @@ const AdminPanel: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="usuario@exemplo.com"
               />
             </div>
@@ -243,7 +264,7 @@ const AdminPanel: React.FC = () => {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="Nome completo"
               />
             </div>
@@ -258,7 +279,7 @@ const AdminPanel: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500 pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 pr-12"
                   placeholder="Mínimo 6 caracteres"
                   minLength={6}
                 />
@@ -278,7 +299,7 @@ const AdminPanel: React.FC = () => {
                 id="isPremium"
                 checked={formData.isPremium}
                 onChange={(e) => setFormData({...formData, isPremium: e.target.checked})}
-                className="h-4 w-4 text-golden-600 focus:ring-golden-500 border-gray-300 rounded"
+                className="h-4 w-4 text-golden-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="isPremium" className="text-sm text-gray-700">
                 Usuário Premium
@@ -320,7 +341,7 @@ const AdminPanel: React.FC = () => {
                 required
                 value={editFormData.email}
                 onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="usuario@exemplo.com"
               />
             </div>
@@ -334,7 +355,7 @@ const AdminPanel: React.FC = () => {
                 required
                 value={editFormData.name}
                 onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="Nome completo"
               />
             </div>
@@ -348,7 +369,7 @@ const AdminPanel: React.FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={editFormData.password}
                   onChange={(e) => setEditFormData({...editFormData, password: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500 pr-12"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 pr-12"
                   placeholder="Deixe vazio para manter a senha atual"
                   minLength={6}
                 />
@@ -368,7 +389,7 @@ const AdminPanel: React.FC = () => {
                 id="editIsPremium"
                 checked={editFormData.isPremium}
                 onChange={(e) => setEditFormData({...editFormData, isPremium: e.target.checked})}
-                className="h-4 w-4 text-golden-600 focus:ring-golden-500 border-gray-300 rounded"
+                className="h-4 w-4 text-golden-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="editIsPremium" className="text-sm text-gray-700">
                 Usuário Premium

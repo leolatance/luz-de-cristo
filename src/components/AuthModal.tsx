@@ -84,7 +84,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                   placeholder="Seu nome completo"
                   autoComplete="name"
                   required={!isLogin}
@@ -104,7 +104,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                 placeholder="seu@email.com"
                 autoComplete="email"
                 required
@@ -122,7 +122,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-golden-500 focus:border-transparent"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                 placeholder="Sua senha"
                 autoComplete={isLogin ? "current-password" : "new-password"}
                 required
@@ -153,7 +153,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="text-golden-600 hover:text-golden-700 font-medium text-sm"
+            className="text-blue-600 hover:text-blue-700 font-medium text-sm"
           >
             {isLogin 
               ? 'Não tem conta? Criar nova conta' 
@@ -164,8 +164,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
 
         {!isLogin && (
-          <div className="mt-4 bg-golden-50 p-4 rounded-lg">
-            <div className="text-xs text-gray-700 space-y-1">
+          <div className="mt-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="text-xs text-blue-800 space-y-1">
               <p>• <strong>Conta gratuita</strong> com acesso básico</p>
               <p>• <strong>Teste premium</strong> por 7 dias disponível</p>
               <p>• Suas informações ficam seguras no seu dispositivo</p>

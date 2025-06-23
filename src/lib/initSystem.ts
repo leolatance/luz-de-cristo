@@ -75,8 +75,8 @@ declare global {
   interface Window {
     LuzDeCristo: {
       init: () => Promise<boolean>;
-      createUser: (email: string, password: string, name: string, isPremium?: boolean) => Promise<any>;
-      showUsers: () => any[];
+      createUser: (email: string, password: string, name: string, isPremium?: boolean) => Promise<unknown>;
+      showUsers: () => unknown[];
       reset: () => boolean;
     };
   }

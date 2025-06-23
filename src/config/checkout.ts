@@ -39,8 +39,18 @@ export const updateCheckoutUrl = (newUrl: string) => {
 };
 
 // Disponibilizar no console global para facilitar configuração
+declare global {
+  interface Window {
+    LuzDeCristoCheckout: {
+      updateUrl: (newUrl: string) => void;
+      getUrl: () => string;
+      openCheckout: () => void;
+    };
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).LuzDeCristoCheckout = {
+  window.LuzDeCristoCheckout = {
     updateUrl: updateCheckoutUrl,
     getUrl: () => CHECKOUT_CONFIG.url,
     openCheckout

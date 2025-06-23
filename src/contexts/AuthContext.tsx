@@ -10,6 +10,7 @@ import {
   registerUser,
   checkTrialExpiration
 } from '../lib/userManager';
+import { loadInitialBackup } from '../lib/backupManager';
 import type { UserSession } from '../lib/userManager';
 
 interface User {
@@ -59,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initialize users and check for existing session on app load
     const initializeAuth = async () => {
       try {
+        // Carregar backup inicial se necessário
+        loadInitialBackup();
+        
         // Create initial users if they don't exist
         await createInitialUsers();
         
