@@ -3,7 +3,7 @@
 
 export const CHECKOUT_CONFIG = {
   // URL para o checkout premium (substitua pelo seu link)
-  url: 'https://checkout.exemplo.com/premium',
+  url: 'https://go.goatpayments.com.br/wyhuqszhio',
   
   // Configurações do checkout
   openInNewTab: true,
