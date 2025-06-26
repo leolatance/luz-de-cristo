@@ -61,31 +61,33 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom Christian theme colors
-				golden: {
-					50: '#fefdf7',
-					100: '#fefae6',
-					200: '#fef3c7',
-					300: '#fde68a',
-					400: '#fcd34d',
-					500: '#f59e0b',
-					600: '#d97706',
+				// Luz de Cristo - Paleta Espiritual
+				'luz-golden': {
+					DEFAULT: '#F4D88B', // Dourado claro - unção, luz divina
+					light: '#F8E2A8',
+					dark: '#E8C767',
 				},
-				heavenly: {
-					50: '#f0f9ff',
-					100: '#e0f2fe',
-					200: '#bae6fd',
-					300: '#7dd3fc',
-					400: '#38bdf8',
-					500: '#0ea5e9',
+				'luz-white': '#FFFFFF', // Branco puro - pureza, paz
+				'luz-beige': {
+					DEFAULT: '#F5F1E6', // Bege claro - acolhimento
+					light: '#FFF8F1',   // Marfim suave alternativo
+					dark: '#F0EBE0',
 				},
-				cream: {
-					50: '#fefef9',
-					100: '#fefcf3',
-					200: '#fcf7e6',
-					300: '#f9f0d3',
-					400: '#f5e6b3',
-					500: '#f0d98a',
+				'luz-celestial': {
+					DEFAULT: '#A9CDEB', // Azul celestial - fé, tranquilidade
+					light: '#C2DCEF',
+					dark: '#8FC0E5',
+				},
+				'luz-graphite': '#333333', // Cinza grafite - texto principal
+				'luz-petrol': {
+					DEFAULT: '#2F4858', // Azul petróleo - autoridade, CTAs
+					light: '#3A5A6E',
+					dark: '#243A47',
+				},
+				'luz-brown': {
+					DEFAULT: '#4E3F2A', // Marrom escuro - tradição bíblica
+					light: '#5D4D37',
+					dark: '#3F321E',
 				}
 			},
 			borderRadius: {

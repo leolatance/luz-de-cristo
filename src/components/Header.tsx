@@ -1,55 +1,86 @@
-
 import React from 'react';
-import { User, LogOut } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   onAuthClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onAuthClick }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <header className="bg-white/80 backdrop-blur-sm border-b border-golden-200/30 sticky top-0 z-40">
-      <div className="container mx-auto px-4 py-3 sm:py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-golden-400 to-golden-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-lg sm:text-xl">✨</span>
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 truncate">Luz de Cristo</h1>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">Inspiração Diária</p>
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+            {/* Logo do App - usando scale para aumentar logo 250x60px */}
+            <div className="w-12 h-12 sm:w-14 h-14 flex items-center justify-center relative overflow-visible">
+              <img 
+                src="/logo.png" 
+                alt="Luz de Cristo Logo" 
+                className="object-contain z-10 transform scale-[1.7] sm:scale-[2.1] translate-x-2"
+                style={{ width: '250px', height: '60px' }}
+                onError={(e) => {
+                  // Fallback: se a imagem não carregar, mostra círculo com letra "L"
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent && !parent.querySelector('.fallback-logo')) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'fallback-logo w-16 h-16 bg-gradient-to-br from-luz-golden to-luz-celestial rounded-full flex items-center justify-center z-10 transform translate-x-2';
+                    fallback.innerHTML = '<span class="text-white font-bold text-xl">L</span>';
+                    parent.appendChild(fallback);
+                  }
+                }}
+              />
             </div>
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {user ? (
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-800 truncate max-w-[120px]">{user.name}</p>
-                  {user.isPremium && (
-                    <p className="text-xs text-golden-600">
-                      {user.trialEndsAt ? 'Premium Trial' : 'Premium'}
-                    </p>
-                  )}
-                </div>
-                <button
-                  onClick={logout}
-                  className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
-                  title="Sair"
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  Olá, {user.name}
+                </span>
+                
+                {/* Premium ativo: isPremium=true */}
+                {user.isPremium && (
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
+                    Premium
+                    {user.premiumEndsAt && (
+                      <span className="ml-1">
+                        ({Math.ceil((new Date(user.premiumEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias)
+                      </span>
+                    )}
+                  </Badge>
+                )}
+                
+                {/* Trial ativo: isPremium=false AND trialEndsAt no futuro */}
+                {!user.isPremium && user.trialEndsAt && new Date(user.trialEndsAt) > new Date() && (
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                    Trial ({Math.ceil((new Date(user.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias)
+                  </Badge>
+                )}
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onAuthClick}
+                  className="text-gray-600 hover:text-gray-800"
                 >
-                  <LogOut size={18} className="sm:w-5 sm:h-5" />
-                </button>
+                  Perfil
+                </Button>
               </div>
             ) : (
               <button
                 onClick={onAuthClick}
-                className="flex items-center space-x-1 sm:space-x-2 bg-gradient-to-r from-golden-500 to-golden-600 text-white px-3 py-2 sm:px-4 rounded-lg hover:from-golden-600 hover:to-golden-700 transition-all duration-200"
+                className="flex items-center space-x-2 bg-gradient-to-r from-luz-golden to-luz-celestial text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
               >
-                <User size={16} className="sm:w-[18px] sm:h-[18px]" />
-                <span className="text-sm sm:text-base">Entrar</span>
+                <User size={18} />
+                <span className="hidden sm:inline">Entrar</span>
               </button>
             )}
           </div>

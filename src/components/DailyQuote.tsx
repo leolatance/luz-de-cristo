@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Share2, RefreshCw } from 'lucide-react';
+import { Share2, RefreshCw, Sparkles } from 'lucide-react';
 import { getTodayQuote } from '../data/content';
 
 const DailyQuote: React.FC = () => {
@@ -29,26 +28,26 @@ const DailyQuote: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="text-center mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-sacred font-bold text-luz-graphite mb-2">
           Frase do Dia
         </h1>
-        <p className="text-sm sm:text-base text-gray-600">Inspiração diária para iluminar seu caminho</p>
+        <p className="text-sm sm:text-base text-luz-brown">Inspiração diária para iluminar seu caminho</p>
       </div>
 
-      <div className="prayer-card max-w-2xl mx-auto text-center animate-gentle-glow">
+      <div className="prayer-card max-w-2xl mx-auto text-center">
         <div className="mb-6">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-golden-400 to-golden-600 rounded-full flex items-center justify-center">
-            <span className="text-white text-2xl">✨</span>
+          <div className="w-16 h-16 mx-auto mb-4 golden-gradient rounded-full flex items-center justify-center sacred-glow">
+            <Sparkles size={24} className="text-luz-petrol" />
           </div>
         </div>
 
-        <blockquote className="font-scripture text-lg sm:text-xl lg:text-2xl text-gray-800 leading-relaxed mb-6 italic">
+        <blockquote className="font-scripture text-lg sm:text-xl lg:text-2xl text-luz-brown leading-relaxed mb-6">
           "{quote.quote}"
         </blockquote>
 
-        <cite className="text-golden-600 font-semibold text-base sm:text-lg">
+        <cite className="text-sacred-highlight text-base sm:text-lg font-sacred">
           {quote.reference}
         </cite>
 
@@ -56,21 +55,21 @@ const DailyQuote: React.FC = () => {
           <button
             onClick={handleShare}
             disabled={isSharing}
-            className="flex items-center space-x-2 bg-gradient-to-r from-heavenly-400 to-heavenly-500 text-white px-6 py-3 rounded-full hover:from-heavenly-500 hover:to-heavenly-600 transition-all duration-200 disabled:opacity-50"
+            className="celestial-card flex items-center space-x-2 text-luz-petrol px-6 py-3 rounded-full hover:bg-luz-celestial/30 transition-all duration-200 disabled:opacity-50 border-0"
           >
             <Share2 size={20} />
-            <span>{isSharing ? 'Compartilhando...' : 'Compartilhar'}</span>
+            <span className="font-semibold">{isSharing ? 'Compartilhando...' : 'Compartilhar'}</span>
           </button>
 
-          <button className="flex items-center space-x-2 border border-golden-300 text-golden-600 px-6 py-3 rounded-full hover:bg-golden-50 transition-all duration-200">
+          <button className="btn-golden flex items-center space-x-2 rounded-full">
             <RefreshCw size={20} />
             <span>Nova Frase</span>
           </button>
         </div>
       </div>
 
-      <div className="text-center text-gray-500 text-sm">
-        <p>Que esta palavra toque seu coração e ilumine seu dia</p>
+      <div className="text-center text-luz-brown text-sm">
+        <p className="font-scripture">Que esta palavra toque seu coração e ilumine seu dia</p>
       </div>
     </div>
   );

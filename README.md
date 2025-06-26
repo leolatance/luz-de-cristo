@@ -1,318 +1,128 @@
-# 🕊️ Luz de Cristo - App de Inspiração Cristã
+# 🌟 Luz de Cristo App
 
-<div align="center">
-  <img src="public/favicon.ico" alt="Luz de Cristo" width="64" height="64">
-  
-  **Transforme sua vida com o poder da fé**
-  
-  [![Deploy Status](https://img.shields.io/badge/deploy-ready-brightgreen)](https://vercel.com)
-  [![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue)](https://www.typescriptlang.org/)
-  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.11-38B2AC)](https://tailwindcss.com/)
-  [![Vite](https://img.shields.io/badge/Vite-5.4.1-646CFF)](https://vitejs.dev/)
-</div>
+> **Aplicativo espiritual premium com 7 dias grátis para novos usuários**
 
-## 📖 Sobre o Projeto
+Uma plataforma espiritual completa baseada na tradição cristã que oferece direcionamento diário, orações organizadas por necessidades e práticas ancestrais para fortalecer sua fé.
 
-O **Luz de Cristo** é uma aplicação web moderna dedicada ao crescimento espiritual e inspiração diária cristã. Desenvolvido para o público adulto (30+), oferece uma experiência completa de fé com recursos premium e conteúdo cuidadosamente selecionado.
+## ✨ Funcionalidades
 
-### ✨ Funcionalidades Principais
+### 🎁 **Para Novos Usuários**
+- **7 Dias Grátis**: Trial completo com acesso a todos os recursos
+- **Registro Simples**: Criação de conta rápida e segura
+- **Experiência Completa**: Teste todos os recursos premium
 
-- 🌅 **Frase do Dia**: Inspiração diária com versículos e reflexões
-- 🙏 **Orações Diárias**: Orações para manhã, tarde e noite
-- 📚 **Histórias Bíblicas**: Narrativas inspiradoras que fortalecem a fé
-- ⭐ **Unções Premium**: Orações especiais da tradição judaico-cristã
-- 🎁 **Trial Gratuito**: 7 dias de acesso premium para novos usuários
-- 📱 **Responsivo**: Funciona perfeitamente em todos os dispositivos
+### 💎 **Recursos Premium (Inclusos no Trial)**
+- **Frase do Dia**: Versículos inspiradores que mudam diariamente para motivar sua jornada
+- **Orações para Todas as Necessidades**: Biblioteca completa organizada por categorias (família, cura, prosperidade, proteção, etc.)
+- **Unções para Todas as Necessidades**: Orações especiais da tradição judaico-cristã para proteção, cura, prosperidade e direcionamento espiritual
+- **Histórias Bíblicas**: Narrativas completas com interpretações e lições práticas para a vida
+- **Palavra da Semana**: Visão profética personalizada que se renova automaticamente a cada 7 dias com versículo, interpretação e oração direcionada
 
-## 🚀 Tecnologias Utilizadas
+### 🛡️ **Painel Administrativo**
+- **Gestão de Usuários**: Visualizar, criar, editar e remover usuários
+- **Controle Premium**: Ativar/desativar acesso premium
+- **Estatísticas**: Dashboard com métricas do sistema
+- **Backup Automático**: Sistema de backup integrado
 
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS + Shadcn/ui
-- **Build Tool**: Vite
-- **Autenticação**: Sistema próprio com bcrypt
-- **Persistência**: localStorage (seguro)
-- **Ícones**: Lucide React
-- **Deploy**: Vercel Ready
+## 🏗️ Arquitetura
 
-## 🏗️ Arquitetura do Projeto
+### **Frontend** (React + TypeScript + Vite)
+- ⚛️ **React 18** com TypeScript
+- 🎨 **Tailwind CSS** + **shadcn/ui** para interface moderna
+- 🎯 **React Router** para navegação
+- 🔄 **React Query** para gerenciamento de estado
+- 📱 **Design Responsivo** para todos os dispositivos
+
+### **Backend** (Node.js + Express + MongoDB)
+- 🚀 **Node.js** com Express.js
+- 🗄️ **MongoDB Atlas** para banco de dados
+- 🔐 **JWT Authentication** com sistema de roles
+- 🛡️ **Middleware de Segurança** (Helmet, CORS, Rate Limiting)
+- 📊 **API RESTful** bem estruturada
+
+## 🛡️ Segurança
+
+### **Autenticação e Autorização**
+- 🔐 JWT tokens com expiração configurável
+- 🚫 Rate limiting para prevenção de ataques
+- 🔒 Senhas hasheadas com bcrypt (12 rounds)
+- 👥 Sistema de roles (admin/user)
+
+### **Proteção da API**
+- 🛡️ Helmet.js para headers de segurança
+- 🌐 CORS configurado para domínios específicos
+- ✅ Validação de dados com express-validator
+- 🚨 Sanitização para prevenção de injection
+
+### **Infraestrutura**
+- 🏗️ Separação completa backend/frontend
+- 🔗 Credenciais MongoDB protegidas no servidor
+- 📡 Comunicação segura via API REST
+- 🔄 Backup automático via MongoDB Atlas
+
+## 📁 Estrutura do Projeto
 
 ```
 luz-de-cristo-app/
-├── src/
-│   ├── components/          # Componentes React
-│   │   ├── ui/             # Componentes base (Shadcn/ui)
-│   │   ├── AdminPanel.tsx  # Painel administrativo
-│   │   ├── AuthModal.tsx   # Modal de autenticação
-│   │   ├── LandingPage.tsx # Página inicial
-│   │   └── ...
-│   ├── contexts/           # Context API
-│   │   └── AuthContext.tsx # Contexto de autenticação
-│   ├── lib/                # Utilitários e lógica
-│   │   ├── userManager.ts  # Gerenciamento de usuários
-│   │   ├── initSystem.ts   # Inicialização do sistema
-│   │   └── utils.ts        # Funções auxiliares
-│   ├── data/               # Dados estáticos
-│   │   └── content.ts      # Conteúdo das orações e histórias
-│   ├── config/             # Configurações
-│   │   └── checkout.ts     # Sistema de checkout
-│   └── pages/              # Páginas principais
-│       ├── Index.tsx       # Página principal
-│       └── NotFound.tsx    # Página 404
-├── public/                 # Assets estáticos
-├── docs/                   # Documentação
-│   ├── SECURITY_README.md  # Documentação de segurança
-│   ├── PREMIUM_SYSTEM.md   # Sistema premium
-│   └── ...
-└── README.md              # Este arquivo
+├── 📁 server/                  # Backend Node.js
+│   ├── 📁 config/             # Configurações (database)
+│   ├── 📁 middleware/         # Middlewares (auth, cors, etc)
+│   ├── 📁 models/             # Modelos MongoDB
+│   ├── 📁 routes/             # Rotas da API
+│   ├── 🔒 .env                # Variáveis de ambiente (não commitado)
+│   ├── 📦 package.json        # Dependências do backend
+│   └── 🚀 server.js           # Servidor principal
+├── 📁 src/                    # Frontend React
+│   ├── 📁 components/         # Componentes React
+│   ├── 📁 contexts/           # Contexts (Auth, etc)
+│   ├── 📁 data/               # Dados estáticos
+│   ├── 📁 hooks/              # Hooks customizados
+│   ├── 📁 lib/                # Utilitários e API client
+│   └── 📁 pages/              # Páginas principais
+├── 📁 public/                 # Assets estáticos
+├── 🔧 package.json            # Dependências do frontend
+├── ⚙️ vite.config.ts          # Configuração Vite
+├── 🎨 tailwind.config.js      # Configuração Tailwind
+└── 📖 README.md               # Este arquivo
 ```
 
-## 🔧 Instalação e Configuração
+## 💰 Modelo de Negócio
 
-### Pré-requisitos
+### **Como Funciona**
+- ✅ **Aplicativo Premium**: Todos os recursos são pagos
+- 🎁 **Trial Gratuito**: 7 dias completos para novos usuários
+- 🔄 **Renovação Automática**: Após o trial, é necessário assinar para continuar
+- 💳 **Pagamento**: Integrado via GoatPayments para processar assinaturas
 
-- Node.js 18+ 
-- npm ou yarn
+### **Estados do Usuário**
+| Estado | Acesso | Duração | Funcionalidades |
+|--------|--------|---------|----------------|
+| **Novo Usuário** | ✅ Completo | 7 dias | Todas as 5 funcionalidades |
+| **Trial Expirado** | ❌ Bloqueado | - | Apenas landing page |
+| **Assinante Premium** | ✅ Completo | Mensal/Anual | Todas as 5 funcionalidades |
 
-### Instalação
-
-1. **Clone o repositório**
-   ```bash
-   git clone https://github.com/seu-usuario/luz-de-cristo-app.git
-   cd luz-de-cristo-app
-   ```
-
-2. **Instale as dependências**
-   ```bash
-   npm install
-   ```
-
-3. **Execute em desenvolvimento**
-   ```bash
-   npm run dev
-   ```
-
-4. **Acesse o aplicativo**
-   ```
-   http://localhost:8080
-   ```
-
-### Build para Produção
-
-```bash
-# Build otimizado
-npm run build
-
-# Preview do build
-npm run preview
-
-# Lint do código
-npm run lint
-```
-
-## 🔐 Sistema de Autenticação
-
-O app possui um sistema de autenticação robusto com:
-
-- **Hash de senhas** com bcrypt (12 rounds)
-- **Rate limiting** (proteção contra força bruta)
-- **Sessões seguras** com tokens de 256 bits
-- **Expiração automática** de sessões (24 horas)
-- **Validação rigorosa** de inputs
-
-### Credenciais Administrativas
-
-Para acessar o painel admin em desenvolvimento:
-
-- **Admin**: admin@luzdecristo.com / Admin123!
-- **Teste**: teste@luzdecristo.com / Teste123!
-
-## 💎 Sistema Premium
-
-### Recursos Gratuitos
-- ✅ Frase inspiradora diária
-- ✅ Orações básicas (manhã, tarde, noite)
-- ✅ Histórias bíblicas fundamentais
-- ✅ Acesso multiplataforma
-
-### Recursos Premium
-- 👑 Unções sagradas completas
-- 📖 Histórias bíblicas exclusivas
-- 🎯 Orações personalizadas
-- 📅 Conteúdo semanal novo
-- 🎧 Suporte prioritário
-
-### Trial Automático
-- 🎁 **7 dias grátis** para novos usuários
-- 🔄 **Acesso completo** durante o trial
-- ⏰ **Expiração automática** após 7 dias
-
-## 🛠️ Administração
-
-### Painel Administrativo
-
-Acesse `/admin` para gerenciar:
-
-- 👥 **Usuários**: Criar, editar, deletar
-- 👑 **Premium**: Ativar/desativar status
-- 🔐 **Senhas**: Redefinir credenciais
-- 📊 **Estatísticas**: Visualizar métricas
-
-### Console de Desenvolvimento
-
-Use o console do navegador para administração:
-
-```javascript
-// Criar usuário
-LuzDeCristo.createUser('email@exemplo.com', 'senha123', 'Nome', true);
-
-// Listar usuários
-LuzDeCristo.showUsers();
-
-// Resetar sistema (cuidado!)
-LuzDeCristo.reset();
-
-// Configurar checkout
-LuzDeCristoCheckout.updateUrl('https://sua-url-de-pagamento.com');
-```
-
-## 🎨 Design System
-
-### Cores Principais
-- **Dourado**: `#f59e0b` (elementos premium)
-- **Celestial**: `#0ea5e9` (elementos secundários)
-- **Creme**: `#fefef9` (fundos suaves)
-
-### Tipografia
-- **Interface**: Inter (Google Fonts)
-- **Escrituras**: Crimson Text (Google Fonts)
-
-### Componentes
-- **Cards de Oração**: Design inspirado em pergaminhos
-- **Gradientes**: Tema celestial e dourado
-- **Animações**: Transições suaves e elegantes
-
-## 📱 Responsividade
-
-Testado e otimizado para:
-
-- 📱 **Mobile**: 320px - 767px
-- 📟 **Tablet**: 768px - 1023px
-- 💻 **Desktop**: 1024px+
-- 🖥️ **Large**: 1440px+
-
-## 🚀 Deploy
-
-### Vercel (Recomendado)
-
-1. **Conecte ao Vercel**
-   ```bash
-   npm i -g vercel
-   vercel
-   ```
-
-2. **Configurações**
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-   - Install Command: `npm install`
-
-3. **Variáveis de Ambiente** (opcional)
-   ```bash
-   NODE_ENV=production
-   ```
-
-### Outras Plataformas
-
-O app é compatível com:
-- Netlify
-- GitHub Pages
-- Firebase Hosting
-- AWS S3 + CloudFront
-
-## 🔒 Segurança
-
-- ✅ **Senhas criptografadas** com bcrypt
-- ✅ **Rate limiting** contra ataques
-- ✅ **Validação de inputs** rigorosa
-- ✅ **Sessões seguras** com tokens
-- ✅ **Sanitização** de dados
-- ✅ **localStorage** com criptografia
-
-Consulte [SECURITY_README.md](SECURITY_README.md) para detalhes completos.
-
-## 📊 Performance
-
-### Métricas de Build
-- **JavaScript**: 402KB (124KB gzipped)
-- **CSS**: 75KB (12KB gzipped)
-- **HTML**: 1.7KB (0.7KB gzipped)
-
-### Otimizações
-- ⚡ Code splitting automático
-- 🗜️ Compressão gzip/brotli
-- 📦 Tree shaking
-- 🖼️ Lazy loading de imagens
-- 💾 Cache eficiente
-
-## 🧪 Testes
-
-### Teste Manual
-1. Acesse a aplicação
-2. Crie uma conta nova
-3. Verifique o trial de 7 dias
-4. Teste todas as funcionalidades
-5. Verifique responsividade
-
-### Checklist de QA
-- [ ] Landing page carrega corretamente
-- [ ] Registro de usuário funciona
-- [ ] Login/logout funcionam
-- [ ] Trial de 7 dias ativado
-- [ ] Conteúdo premium bloqueado/desbloqueado
-- [ ] Painel admin acessível
-- [ ] Responsividade em todos os breakpoints
-
-## 🤝 Contribuição
-
-### Estrutura de Commits
-```
-feat: nova funcionalidade
-fix: correção de bug
-docs: documentação
-style: formatação
-refactor: refatoração
-test: testes
-chore: manutenção
-```
-
-### Fluxo de Desenvolvimento
-1. Fork do projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'feat: adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+### **Funcionalidades Premium**
+1. **Frase do Dia** - Versículos inspiradores diários
+2. **Orações para Todas as Necessidades** - 23+ orações categorizadas
+3. **Unções para Todas as Necessidades** - 23+ práticas judaico-cristãs
+4. **Histórias Bíblicas** - 15+ narrativas com interpretações
+5. **Palavra da Semana** - Visão profética personalizada
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 📞 Suporte
-
-- 📧 **Email**: contato@luzdecristo.com
-- 💬 **WhatsApp**: +55 (11) 99999-9999
-- 🌐 **Website**: https://luzdecristo.vercel.app
-
-## 🙏 Agradecimentos
-
-- **Comunidade React** pelo framework incrível
-- **Tailwind CSS** pelo sistema de design
-- **Shadcn/ui** pelos componentes elegantes
-- **Vercel** pela plataforma de deploy
-- **Todos os usuários** que confiam no app para sua jornada espiritual
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
 
 ---
 
-<div align="center">
-  <p><strong>Feito com ❤️ e 🙏 para a comunidade cristã</strong></p>
-  <p><em>"Seja a luz do mundo" - Mateus 5:14</em></p>
-</div>
+## 🎯 Resumo Executivo
+
+O **Luz de Cristo App** é uma plataforma espiritual premium baseada na tradição judaico-cristã que oferece:
+
+- **5 funcionalidades espirituais** cuidadosamente desenvolvidas
+- **Trial de 7 dias gratuito** para novos usuários experimentarem
+- **Conteúdo personalizado** que se renova automaticamente (frase diária, palavra semanal)
+- **Biblioteca completa** com 23+ orações, 23+ unções e 15+ histórias bíblicas
+- **Arquitetura segura** com backend Node.js + MongoDB e frontend React
+- **Sistema de pagamento** integrado para conversão trial → premium
+
+**Desenvolvido com 💙 para fortalecer a fé e aproximar corações de Deus** 

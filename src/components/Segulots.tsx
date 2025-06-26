@@ -1,18 +1,19 @@
-
 import React from 'react';
-import { Lock, Crown, Clock } from 'lucide-react';
+import { Lock, Crown, Clock, Calendar } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { segulots } from '../data/content';
+import { Badge } from '@/components/ui/badge';
+import { openCheckout } from '../config/checkout';
 
 const Segulots: React.FC = () => {
-  const { user, startTrial } = useAuth();
+  const { user, hasAccessToPremium } = useAuth();
 
-  if (!user?.isPremium) {
+  if (!hasAccessToPremium()) {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-            Unções Premium
+            Unções Sagradas
           </h1>
           <p className="text-sm sm:text-base text-gray-600">Orações especiais da tradição judaico-cristã</p>
         </div>
@@ -61,7 +62,7 @@ const Segulots: React.FC = () => {
           </div>
 
           <button
-            onClick={startTrial}
+            onClick={openCheckout}
             className="w-full bg-gradient-to-r from-golden-500 to-golden-600 text-white py-4 rounded-lg font-medium hover:from-golden-600 hover:to-golden-700 transition-all duration-200 flex items-center justify-center space-x-2"
           >
             <Clock size={20} />
@@ -72,6 +73,30 @@ const Segulots: React.FC = () => {
             Sem compromisso • Cancele a qualquer momento
           </p>
         </div>
+
+        {/* Status Badge */}
+        <div className="flex justify-center mb-6">
+          {/* Trial ativo: isPremium=false AND trialEndsAt no futuro */}
+          {user && !user.isPremium && user.trialEndsAt && new Date(user.trialEndsAt) > new Date() && (
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-4 py-2 text-sm font-medium">
+              <Calendar className="w-4 h-4 mr-2" />
+              🎁 Trial ativo até {new Date(user.trialEndsAt).toLocaleDateString('pt-BR')}
+            </Badge>
+          )}
+          
+          {/* Premium ativo: isPremium=true */}
+          {user?.isPremium && (
+            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 px-4 py-2 text-sm font-medium">
+              <Crown className="w-4 h-4 mr-2" />
+              👑 Premium Ativo
+              {user.premiumEndsAt && (
+                <span className="ml-1">
+                  até {new Date(user.premiumEndsAt).toLocaleDateString('pt-BR')}
+                </span>
+              )}
+            </Badge>
+          )}
+        </div>
       </div>
     );
   }
@@ -80,14 +105,9 @@ const Segulots: React.FC = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="text-center mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
-          Unções Premium
+          Unções Sagradas
         </h1>
         <p className="text-sm sm:text-base text-gray-600">Orações especiais da tradição judaico-cristã</p>
-        {user.trialEndsAt && (
-          <p className="text-blue-600 font-medium mt-2 text-sm sm:text-base">
-            Teste grátis até {new Date(user.trialEndsAt).toLocaleDateString('pt-BR')}
-          </p>
-        )}
       </div>
 
       <div className="grid gap-6">

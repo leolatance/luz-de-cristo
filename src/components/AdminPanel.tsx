@@ -1,126 +1,148 @@
 import React, { useState, useEffect } from 'react';
-import { User, Plus, Trash2, Eye, EyeOff, Shield, Users, Edit, Crown, Download } from 'lucide-react';
-import { createUser, listUsers, deleteUser, updatePassword, updateUser, activatePremium } from '../lib/userManager';
-import { createBackupDownload } from '../lib/backupManager';
-import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { 
+  Users, 
+  Shield, 
+  User, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Crown, 
+  Eye, 
+  EyeOff,
+  Calendar,
+  Clock,
+  UserCheck,
+  UserX,
+  Settings
+} from 'lucide-react';
 import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Badge } from './ui/badge';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from './ui/dialog';
 import { Alert, AlertDescription } from './ui/alert';
+import { apiClient } from '../lib/api';
+import { toast } from 'sonner';
 
 interface UserData {
-  id: string;
+  _id: string;
   email: string;
   name: string;
   isPremium: boolean;
-  trialEndsAt?: Date;
-  createdAt: Date;
-  lastLoginAt?: Date;
-  loginAttempts: number;
-  lockedUntil?: Date;
+  trialEndsAt?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+  role: string;
+}
+
+interface Stats {
+  totalUsers: number;
+  premiumUsers: number;
+  trialUsers: number;
+  freeUsers: number;
+  todayRegistrations: number;
 }
 
 const AdminPanel: React.FC = () => {
   const [users, setUsers] = useState<UserData[]>([]);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
-  
-  // Form state
+  const [showPassword, setShowPassword] = useState(false);
+
   const [formData, setFormData] = useState({
     email: '',
-    password: '',
     name: '',
-    isPremium: false
+    password: '',
+    isPremium: false,
+    role: 'user'
   });
 
-  // Edit form state
   const [editFormData, setEditFormData] = useState({
     email: '',
     name: '',
+    password: '',
     isPremium: false,
-    password: ''
+    role: 'user'
   });
-
-  const [syncStatus, setSyncStatus] = useState<string>('');
-
-  const loadUsers = () => {
-    const userList = listUsers();
-    setUsers(userList);
-  };
 
   useEffect(() => {
     loadUsers();
-
-    // Escutar evento de atualização de usuários de outras abas
-    const handleUsersUpdate = () => {
-      console.log('📱 Sincronizando usuários entre abas...');
-      setSyncStatus('🔄 Sincronizando com outras abas...');
-      loadUsers();
-      
-      // Limpar status após 2 segundos
-      setTimeout(() => setSyncStatus(''), 2000);
-    };
-
-    window.addEventListener('usersUpdated', handleUsersUpdate);
-
-    return () => {
-      window.removeEventListener('usersUpdated', handleUsersUpdate);
-    };
+    loadStats();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      const response = await apiClient.getUsers();
+      if (response.data?.users) {
+        setUsers(response.data.users);
+      } else if (response.data && Array.isArray(response.data)) {
+        setUsers(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuários:', error);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await apiClient.getStats();
+      if (response.data) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    
     try {
-      await createUser(
-        formData.email,
-        formData.password,
-        formData.name,
-        formData.isPremium,
-        true // isAdminCreated = true
-      );
-      
-      toast.success('Usuário criado com sucesso!');
-      setFormData({ email: '', password: '', name: '', isPremium: false });
-      setShowCreateForm(false);
-      loadUsers();
+      const response = await apiClient.createUser(formData);
+      if (response.error) {
+        alert(response.error);
+      } else {
+        setFormData({ email: '', name: '', password: '', isPremium: false, role: 'user' });
+        setShowCreateForm(false);
+        loadUsers();
+        loadStats();
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao criar usuário');
+      console.error('Erro ao criar usuário:', error);
+      alert('Erro ao criar usuário');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string, userEmail: string) => {
-    if (window.confirm(`Tem certeza que deseja deletar o usuário ${userEmail}?`)) {
-      try {
-        deleteUser(userId);
-        toast.success('Usuário deletado com sucesso!');
-        loadUsers();
-      } catch (error) {
-        toast.error('Erro ao deletar usuário');
-      }
+    if (!confirm(`Tem certeza que deseja excluir o usuário ${userEmail}?`)) {
+      return;
     }
-  };
 
-  const handleResetPassword = async (userId: string, userEmail: string) => {
-    const newPassword = prompt(`Digite a nova senha para ${userEmail}:`);
-    if (newPassword && newPassword.length >= 6) {
-      try {
-        await updatePassword(userId, newPassword);
-        toast.success('Senha atualizada com sucesso!');
-      } catch (error) {
-        toast.error('Erro ao atualizar senha');
+    try {
+      const response = await apiClient.deleteUser(userId);
+      if (response.error) {
+        alert(response.error);
+      } else {
+        loadUsers();
+        loadStats();
       }
-    } else if (newPassword) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    } catch (error) {
+      console.error('Erro ao deletar usuário:', error);
+      alert('Erro ao deletar usuário');
     }
   };
 
@@ -129,8 +151,9 @@ const AdminPanel: React.FC = () => {
     setEditFormData({
       email: user.email,
       name: user.name,
+      password: '',
       isPremium: user.isPremium,
-      password: ''
+      role: user.role
     });
   };
 
@@ -140,55 +163,73 @@ const AdminPanel: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const updates: Partial<UserData> & { password?: string } = {
-        name: editFormData.name,
-        email: editFormData.email,
-        isPremium: editFormData.isPremium
-      };
-
-      if (editFormData.password) {
-        updates.password = editFormData.password;
+      const updateData = { ...editFormData };
+      if (!updateData.password) {
+        delete updateData.password;
       }
 
-      await updateUser(editingUser.id, updates);
-      toast.success('Usuário atualizado com sucesso!');
-      setEditingUser(null);
-      setEditFormData({ email: '', name: '', isPremium: false, password: '' });
-      loadUsers();
+      const response = await apiClient.updateUser(editingUser._id, updateData);
+      if (response.error) {
+        alert(response.error);
+      } else {
+        setEditingUser(null);
+        loadUsers();
+        loadStats();
+      }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar usuário');
+      console.error('Erro ao atualizar usuário:', error);
+      alert('Erro ao atualizar usuário');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleActivatePremium = (userId: string, userName: string) => {
-    if (window.confirm(`Ativar premium permanente para ${userName}?`)) {
-      try {
-        activatePremium(userId);
-        toast.success('Premium ativado com sucesso!');
-        loadUsers();
-      } catch (error) {
-        toast.error('Erro ao ativar premium');
-      }
+  const handleActivatePremium = async (userId: string, userName: string) => {
+    if (!confirm(`Deseja ativar o premium para ${userName}? O usuário terá acesso premium por 30 dias.`)) {
+      return;
     }
-  };
 
-  const handleBackup = () => {
     try {
-      const backup = createBackupDownload();
-      if (backup) {
-        toast.success('Backup criado! Substitua o arquivo src/data/users-backup.json e faça commit.');
+      setIsLoading(true);
+      const response = await apiClient.activatePremium(userId);
+      if (response.error) {
+        alert(response.error);
       } else {
-        toast.info('Nenhum usuário para fazer backup');
+        toast.success(`Premium ativado para ${userName}!`);
+        loadUsers();
+        loadStats();
       }
     } catch (error) {
-      toast.error('Erro ao criar backup');
+      toast.error('Erro ao ativar premium');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
+  const handleMakeFree = async (userId: string, userName: string) => {
+    if (!confirm(`Deseja tornar ${userName} um usuário gratuito? Isso removerá o acesso premium e trial.`)) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await apiClient.makeFree(userId);
+      if (response.error) {
+        alert(response.error);
+      } else {
+        toast.success(`${userName} agora é um usuário gratuito!`);
+        loadUsers();
+        loadStats();
+      }
+    } catch (error) {
+      toast.error('Erro ao tornar usuário gratuito');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -197,372 +238,379 @@ const AdminPanel: React.FC = () => {
     });
   };
 
+  const getStatusBadge = (user: UserData) => {
+    // Premium ativo: isPremium=true
+    if (user.isPremium) {
+      return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Premium</Badge>;
+    }
+    
+    // Trial ativo: isPremium=false AND trialEndsAt no futuro
+    if (!user.isPremium && user.trialEndsAt && new Date(user.trialEndsAt) > new Date()) {
+      return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Trial</Badge>;
+    }
+    
+    return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">Gratuito</Badge>;
+  };
+
+  const getRoleBadge = (role: string) => {
+    if (role === 'admin') {
+      return <Badge className="bg-slate-100 text-slate-800 border-slate-200">Admin</Badge>;
+    }
+    return <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">Usuário</Badge>;
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {syncStatus && (
-        <Alert>
-          <AlertDescription>{syncStatus}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-          Painel Administrativo
-        </h1>
-        <p className="text-gray-600">Gerenciar usuários do sistema</p>
-      </div>
-
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 sm:mb-8">
-        <div className="bg-white/80 backdrop-blur-sm border border-golden-200/30 rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total de Usuários</p>
-              <p className="text-2xl font-bold text-gray-800">{users.length}</p>
-            </div>
-            <Users className="text-golden-500" size={32} />
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm border border-golden-200/30 rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Usuários Premium</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter(u => u.isPremium).length}
-              </p>
-            </div>
-            <Shield className="text-golden-500" size={32} />
-          </div>
-        </div>
-
-        <div className="bg-white/80 backdrop-blur-sm border border-golden-200/30 rounded-xl p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Contas Bloqueadas</p>
-              <p className="text-2xl font-bold text-gray-800">
-                {users.filter(u => u.lockedUntil && new Date() < new Date(u.lockedUntil)).length}
-              </p>
-            </div>
-            <User className="text-red-500" size={32} />
-          </div>
-        </div>
-      </div>
-
-      {/* Botões de Ação */}
-      <div className="flex flex-col sm:flex-row justify-end gap-3 mb-6">
-        <button
-          onClick={handleBackup}
-          className="flex items-center space-x-2 bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-all duration-200"
-        >
-          <Download size={20} />
-          <span>Backup Usuários</span>
-        </button>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-golden-500 to-golden-600 text-white px-6 py-3 rounded-lg hover:from-golden-600 hover:to-golden-700 transition-all duration-200"
-        >
-          <Plus size={20} />
-          <span>Criar Usuário</span>
-        </button>
-      </div>
-
-      {/* Formulário de Criação */}
-      {showCreateForm && (
-        <div className="prayer-card mb-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Criar Novo Usuário</h3>
-          
-          <form onSubmit={handleCreateUser} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="usuario@exemplo.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="Nome completo"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 pr-12"
-                  placeholder="Mínimo 6 caracteres"
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isPremium"
-                checked={formData.isPremium}
-                onChange={(e) => setFormData({...formData, isPremium: e.target.checked})}
-                className="h-4 w-4 text-golden-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="isPremium" className="text-sm text-gray-700">
-                Usuário Premium
-              </label>
-            </div>
-
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-gradient-to-r from-golden-500 to-golden-600 text-white py-3 rounded-lg font-medium hover:from-golden-600 hover:to-golden-700 transition-all duration-200 disabled:opacity-50"
-              >
-                {isLoading ? 'Criando...' : 'Criar Usuário'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(false)}
-                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Formulário de Edição */}
-      {editingUser && (
-        <div className="prayer-card mb-8">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Editar Usuário</h3>
-          
-          <form onSubmit={handleUpdateUser} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                required
-                value={editFormData.email}
-                onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="usuario@exemplo.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nome
-              </label>
-              <input
-                type="text"
-                required
-                value={editFormData.name}
-                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="Nome completo"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nova Senha (opcional)
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={editFormData.password}
-                  onChange={(e) => setEditFormData({...editFormData, password: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 pr-12"
-                  placeholder="Deixe vazio para manter a senha atual"
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="editIsPremium"
-                checked={editFormData.isPremium}
-                onChange={(e) => setEditFormData({...editFormData, isPremium: e.target.checked})}
-                className="h-4 w-4 text-golden-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="editIsPremium" className="text-sm text-gray-700">
-                Usuário Premium
-              </label>
-            </div>
-
-            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-lg font-medium hover:from-green-600 hover:to-green-700 transition-all duration-200 disabled:opacity-50"
-              >
-                {isLoading ? 'Salvando...' : 'Salvar Alterações'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingUser(null);
-                  setEditFormData({ email: '', name: '', isPremium: false, password: '' });
-                }}
-                className="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Lista de Usuários */}
-      <div className="prayer-card">
-        <h3 className="text-xl font-bold text-gray-800 mb-6">Usuários Cadastrados</h3>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         
-        <div className="overflow-x-auto -mx-6 sm:mx-0">
-          <table className="w-full text-sm min-w-[640px] sm:min-w-0">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700">Usuário</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 hidden sm:table-cell">Status</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 hidden md:table-cell">Criado</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700 hidden lg:table-cell">Último Login</th>
-                <th className="text-left py-3 px-2 sm:px-4 font-medium text-gray-700">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-2 sm:px-4">
-                    <div>
-                      <p className="font-medium text-gray-800 text-sm sm:text-base">{user.name}</p>
-                      <p className="text-gray-600 text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">{user.email}</p>
-                      {/* Status visível apenas em mobile */}
-                      <div className="sm:hidden mt-1 space-y-1">
-                        {user.isPremium && (
-                          <span className="inline-block bg-golden-100 text-golden-700 px-2 py-1 rounded-full text-xs mr-1">
-                            Premium
-                          </span>
-                        )}
-                        {user.lockedUntil && new Date() < new Date(user.lockedUntil) && (
-                          <span className="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-                            Bloqueado
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
-                    <div className="space-y-1">
-                      {user.isPremium && (
-                        <span className="inline-block bg-golden-100 text-golden-700 px-2 py-1 rounded-full text-xs">
-                          Premium
-                        </span>
-                      )}
-                      {user.trialEndsAt && (
-                        <span className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
-                          Trial até {formatDate(user.trialEndsAt).split(' ')[0]}
-                        </span>
-                      )}
-                      {user.lockedUntil && new Date() < new Date(user.lockedUntil) && (
-                        <span className="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-                          Bloqueado
-                        </span>
-                      )}
-                      {user.loginAttempts > 0 && (
-                        <span className="inline-block bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">
-                          {user.loginAttempts} tentativas
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-2 sm:px-4 text-gray-600 text-xs sm:text-sm hidden md:table-cell">
-                    {formatDate(user.createdAt)}
-                  </td>
-                  <td className="py-3 px-2 sm:px-4 text-gray-600 text-xs sm:text-sm hidden lg:table-cell">
-                    {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Nunca'}
-                  </td>
-                  <td className="py-3 px-2 sm:px-4">
-                    <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={() => handleEditUser(user)}
-                        className="text-green-600 hover:text-green-800 flex items-center justify-center"
-                        title="Editar usuário"
-                      >
-                        <Edit size={14} />
-                      </button>
-                      {!user.isPremium && (
-                        <button
-                          onClick={() => handleActivatePremium(user.id, user.name)}
-                          className="text-golden-600 hover:text-golden-800 flex items-center justify-center"
-                          title="Ativar Premium"
-                        >
-                          <Crown size={14} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleResetPassword(user.id, user.email)}
-                        className="text-blue-600 hover:text-blue-800 text-xs"
-                        title="Redefinir senha"
-                      >
-                        Reset
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id, user.email)}
-                        className="text-red-600 hover:text-red-800 flex items-center justify-center"
-                        title="Deletar usuário"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Settings className="h-8 w-8 text-slate-600" />
+            <h1 className="text-3xl font-bold text-slate-800">Painel Administrativo</h1>
+          </div>
+          <p className="text-slate-600">
+            Gerencie usuários e monitore o sistema da plataforma Luz de Cristo
+          </p>
         </div>
 
-        {users.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            <p>Nenhum usuário cadastrado.</p>
+        {/* Estatísticas */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Total de Usuários</p>
+                    <p className="text-2xl font-bold text-slate-900">{stats.totalUsers}</p>
+                  </div>
+                  <Users className="h-8 w-8 text-slate-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Premium</p>
+                    <p className="text-2xl font-bold text-emerald-600">{stats.premiumUsers}</p>
+                  </div>
+                  <Crown className="h-8 w-8 text-emerald-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Em Trial</p>
+                    <p className="text-2xl font-bold text-blue-600">{stats.trialUsers}</p>
+                  </div>
+                  <Shield className="h-8 w-8 text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Gratuitos</p>
+                    <p className="text-2xl font-bold text-slate-600">{stats.freeUsers}</p>
+                  </div>
+                  <User className="h-8 w-8 text-slate-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Hoje</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.todayRegistrations}</p>
+                  </div>
+                  <Plus className="h-8 w-8 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
+
+        {/* Ações */}
+        <div className="flex justify-start">
+          <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Usuário
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Criar Novo Usuário</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados para criar um novo usuário no sistema.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      required
+                      className="w-full pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isPremium"
+                    checked={formData.isPremium}
+                    onCheckedChange={(checked) => setFormData({ ...formData, isPremium: !!checked })}
+                  />
+                  <Label htmlFor="isPremium" className="text-sm">Usuário Premium</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Tipo de Usuário</Label>
+                  <select
+                    id="role"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="user">Usuário</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {isLoading ? 'Criando...' : 'Criar Usuário'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Lista de Usuários */}
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="border-b bg-slate-50">
+            <CardTitle className="text-slate-800">Usuários do Sistema</CardTitle>
+            <CardDescription className="text-slate-600">
+              Gerencie todos os usuários cadastrados na plataforma
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b">
+                  <tr>
+                    <th className="text-left p-4 font-medium text-slate-700">Usuário</th>
+                    <th className="text-left p-4 font-medium text-slate-700">Status</th>
+                    <th className="text-left p-4 font-medium text-slate-700">Tipo</th>
+                    <th className="text-left p-4 font-medium text-slate-700">Criado em</th>
+                    <th className="text-left p-4 font-medium text-slate-700">Último Login</th>
+                    <th className="text-left p-4 font-medium text-slate-700">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((user) => (
+                    <tr key={user._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4">
+                        <div>
+                          <div className="font-medium text-slate-900">{user.name}</div>
+                          <div className="text-sm text-slate-500">{user.email}</div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex flex-col gap-2">
+                          {getStatusBadge(user)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {getRoleBadge(user.role)}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(user.createdAt)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Clock className="w-4 h-4" />
+                          {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Nunca'}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditUser(user)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          {!user.isPremium && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleActivatePremium(user._id, user.name)}
+                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                              title="Ativar Premium"
+                            >
+                              <Crown className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {(user.isPremium || user.trialEndsAt) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMakeFree(user._id, user.name)}
+                              className="h-8 w-8 p-0 text-orange-600 hover:text-orange-700 border-orange-200 hover:border-orange-300"
+                              title="Tornar Gratuito"
+                            >
+                              <UserX className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteUser(user._id, user.email)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Modal de Edição */}
+        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Usuário</DialogTitle>
+              <DialogDescription>
+                Modifique os dados do usuário selecionado.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUpdateUser} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Nome</Label>
+                <Input
+                  id="edit-name"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  required
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">Nova Senha (opcional)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={editFormData.password}
+                  onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                  placeholder="Deixe em branco para manter a atual"
+                  className="w-full"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-isPremium"
+                  checked={editFormData.isPremium}
+                  onCheckedChange={(checked) => setEditFormData({ ...editFormData, isPremium: !!checked })}
+                />
+                <Label htmlFor="edit-isPremium" className="text-sm">Usuário Premium</Label>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Tipo de Usuário</Label>
+                <select
+                  id="edit-role"
+                  value={editFormData.role}
+                  onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="user">Usuário</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Footer Info */}
+        <Alert className="border-slate-200 bg-slate-50">
+          <Shield className="h-4 w-4 text-slate-600" />
+          <AlertDescription className="text-slate-700">
+            <strong>Sistema Seguro:</strong> Arquitetura backend/frontend separada com MongoDB protegido e autenticação JWT.
+          </AlertDescription>
+        </Alert>
       </div>
     </div>
   );

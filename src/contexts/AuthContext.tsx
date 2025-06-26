@@ -1,17 +1,5 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  authenticateUser, 
-  getCurrentSession, 
-  logout as logoutUser, 
-  startTrial as startUserTrial,
-  cleanupExpiredSessions,
-  createInitialUsers,
-  registerUser,
-  checkTrialExpiration
-} from '../lib/userManager';
-import { loadInitialBackup } from '../lib/backupManager';
-import type { UserSession } from '../lib/userManager';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiClient } from '../lib/api';
 
 interface User {
   id: string;
@@ -19,6 +7,8 @@ interface User {
   name: string;
   isPremium: boolean;
   trialEndsAt?: Date;
+  premiumEndsAt?: Date;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -26,11 +16,11 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
-  startTrial: () => void;
   isLoading: boolean;
   showPremiumExpiredModal: boolean;
   setShowPremiumExpiredModal: (show: boolean) => void;
   handlePremiumRenewal: () => void;
+  hasAccessToPremium: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,74 +33,73 @@ export const useAuth = () => {
   return context;
 };
 
-const convertSessionToUser = (session: UserSession): User => ({
-  id: session.id,
-  email: session.email,
-  name: session.name,
-  isPremium: session.isPremium,
-  trialEndsAt: session.trialEndsAt
-});
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showPremiumExpiredModal, setShowPremiumExpiredModal] = useState(false);
 
+  // Função helper para verificar acesso premium - LÓGICA ATUALIZADA
+  const hasAccessToPremium = useCallback((): boolean => {
+    if (!user) return false;
+    
+    // Premium ativo: isPremium=true AND (premiumEndsAt=null OR premiumEndsAt no futuro)
+    if (user.isPremium && (!user.premiumEndsAt || user.premiumEndsAt > new Date())) return true;
+    
+    // Trial ativo: isPremium=false AND trialEndsAt no futuro
+    if (!user.isPremium && user.trialEndsAt && user.trialEndsAt > new Date()) return true;
+    
+    return false;
+  }, [user]);
+
   useEffect(() => {
-    // Initialize users and check for existing session on app load
+    // Check for existing session on app load
     const initializeAuth = async () => {
       try {
-        // Carregar backup inicial se necessário
-        loadInitialBackup();
+        const response = await apiClient.getMe();
         
-        // Create initial users if they don't exist
-        await createInitialUsers();
-        
-        // Clean up expired sessions
-        cleanupExpiredSessions();
-        
-        // Check for existing valid session
-        const session = getCurrentSession();
-        if (session) {
-          setUser(convertSessionToUser(session));
+        if (response.data?.user) {
+          const userData = response.data.user;
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            name: userData.name,
+            isPremium: userData.isPremium,
+            trialEndsAt: userData.trialEndsAt ? new Date(userData.trialEndsAt) : undefined,
+            premiumEndsAt: userData.premiumEndsAt ? new Date(userData.premiumEndsAt) : undefined,
+            role: userData.role
+          });
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        // Silently handle - no session active
       } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
-
-    // Set up periodic session cleanup
-    const cleanupInterval = setInterval(cleanupExpiredSessions, 5 * 60 * 1000); // Every 5 minutes
-
-    // Escutar mudanças no localStorage entre abas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'luzdecristo_users' && e.newValue) {
-        console.log('🔄 Detectada mudança nos usuários, sincronizando...');
-        // Forçar re-render dos componentes que dependem dos usuários
-        window.dispatchEvent(new CustomEvent('usersUpdated'));
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      clearInterval(cleanupInterval);
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const session = await authenticateUser(email, password);
-      setUser(convertSessionToUser(session));
-    } catch (error) {
-      console.error('Error during login:', error);
-      throw error; // Re-throw to be handled by the component
+      const response = await apiClient.login(email, password);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (response.data?.user) {
+        const userData = response.data.user;
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          isPremium: userData.isPremium,
+          trialEndsAt: userData.trialEndsAt ? new Date(userData.trialEndsAt) : undefined,
+          premiumEndsAt: userData.premiumEndsAt ? new Date(userData.premiumEndsAt) : undefined,
+          role: userData.role
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -119,38 +108,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string, name: string) => {
     setIsLoading(true);
     try {
-      const user = await registerUser(email, password, name);
+      const response = await apiClient.register(email, password, name);
       
-      // Após criar a conta, fazer login automaticamente
-      const session = await authenticateUser(email, password);
-      setUser(convertSessionToUser(session));
-    } catch (error) {
-      console.error('Error during registration:', error);
-      throw error; // Re-throw to be handled by the component
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (response.data?.user) {
+        const userData = response.data.user;
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          isPremium: userData.isPremium,
+          trialEndsAt: userData.trialEndsAt ? new Date(userData.trialEndsAt) : undefined,
+          premiumEndsAt: userData.premiumEndsAt ? new Date(userData.premiumEndsAt) : undefined
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const logout = () => {
-    logoutUser();
+    apiClient.logout();
     setUser(null);
-  };
-
-  const startTrial = () => {
-    if (user) {
-      startUserTrial(user.id);
-      
-      // Update user state immediately
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 7);
-      
-      setUser({
-        ...user,
-        isPremium: true,
-        trialEndsAt: trialEnd
-      });
-    }
   };
 
   const handlePremiumRenewal = () => {
@@ -163,14 +145,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setShowPremiumExpiredModal(false);
   };
 
-  // Verificar expiração do trial periodicamente
+  // Verificar expiração do trial e premium periodicamente - CORRIGIDO RACE CONDITION
   useEffect(() => {
-    if (!user) return;
+    if (!user || (!user.trialEndsAt && !user.premiumEndsAt)) return;
 
     const checkExpiration = () => {
-      const { expired } = checkTrialExpiration();
+      let expired = false;
+      const updates: Partial<User> = {};
+
+      // Verificar trial expirado
+      if (user.trialEndsAt && user.trialEndsAt < new Date()) {
+        expired = true;
+        updates.trialEndsAt = undefined;
+      }
+
+      // Verificar premium expirado
+      if (user.premiumEndsAt && user.premiumEndsAt < new Date()) {
+        expired = true;
+        updates.isPremium = false;
+        updates.premiumEndsAt = undefined;
+      }
+
       if (expired && !showPremiumExpiredModal) {
         setShowPremiumExpiredModal(true);
+        setUser(prevUser => prevUser ? { ...prevUser, ...updates } : null);
       }
     };
 
@@ -180,8 +178,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verificar a cada minuto
     const interval = setInterval(checkExpiration, 60000);
 
+    // CORREÇÃO: Sempre limpar o interval
     return () => clearInterval(interval);
-  }, [user, showPremiumExpiredModal]);
+  }, [user, showPremiumExpiredModal]); // Todas as dependências incluídas
 
   return (
     <AuthContext.Provider value={{
@@ -189,11 +188,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       register,
       logout,
-      startTrial,
       isLoading,
       showPremiumExpiredModal,
       setShowPremiumExpiredModal,
-      handlePremiumRenewal
+      handlePremiumRenewal,
+      hasAccessToPremium
     }}>
       {children}
     </AuthContext.Provider>
