@@ -12,8 +12,11 @@ import bcrypt from 'bcryptjs';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Conectar ao MongoDB
-await connectDB();
+// Conectar ao MongoDB (não bloquear o servidor se falhar)
+connectDB().catch(err => {
+  console.error('❌ Falha inicial na conexão MongoDB:', err.message);
+  console.log('⚠️ Servidor continuará rodando, mas funcionalidades do banco estarão indisponíveis');
+});
 
 // Middlewares de segurança
 app.use(helmet());
