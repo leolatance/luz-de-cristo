@@ -51,7 +51,7 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Índices para performance
-UserSchema.index({ email: 1 });
+// UserSchema.index({ email: 1 }); // Removido - unique: true já cria este índice
 UserSchema.index({ isPremium: 1 });
 UserSchema.index({ createdAt: -1 });
 

@@ -18,6 +18,16 @@ const connectDB = async () => {
     });
     
     console.log(`🟢 MongoDB conectado: ${conn.connection.host}`);
+    
+    // Eventos de conexão para debug
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB desconectado');
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('🟢 MongoDB reconectado');
+    });
+    
     return conn;
   } catch (error) {
     console.error('❌ Erro de conexão MongoDB:', error.message);

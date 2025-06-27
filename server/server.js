@@ -13,10 +13,17 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Conectar ao MongoDB (não bloquear o servidor se falhar)
-connectDB().catch(err => {
-  console.error('❌ Falha inicial na conexão MongoDB:', err.message);
-  console.log('⚠️ Servidor continuará rodando, mas funcionalidades do banco estarão indisponíveis');
-});
+let mongoConnection;
+connectDB()
+  .then(conn => {
+    mongoConnection = conn;
+    // Criar usuários iniciais apenas após conexão bem-sucedida
+    return createInitialUsers();
+  })
+  .catch(err => {
+    console.error('❌ Falha inicial na conexão MongoDB:', err.message);
+    console.log('⚠️ Servidor continuará rodando, mas funcionalidades do banco estarão indisponíveis');
+  });
 
 // Middlewares de segurança
 app.use(helmet());
@@ -79,14 +86,12 @@ async function createInitialUsers() {
       
       await adminUser.save();
       await testUser.save();
+      console.log('✅ Usuários iniciais criados com sucesso');
     }
   } catch (error) {
     console.error('❌ Erro ao criar usuários iniciais:', error);
   }
 }
-
-// Inicializar usuários
-await createInitialUsers();
 
 // Middleware de erro global
 app.use((err, req, res, next) => {
